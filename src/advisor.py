@@ -1,6 +1,9 @@
 import ollama
 
-def get_advice(user_data: dict, score: int, rating: str) -> str:
+def get_advice(user_data: dict, score: int, rating: str):
+    """
+    Stream advice from Ollama (generator)
+    """
     prompt = f"""
 You are Dr.Cre, a credit score advisor.
 
@@ -11,17 +14,24 @@ Keep each tip to one sentence.
 Be direct and helpful.
 """
 
-    response = ollama.chat(
+    stream = ollama.chat(
         model='llama3.1',
-        messages=[{'role': 'user', 'content': prompt}]
+        messages=[{'role': 'user', 'content': prompt}],
+        stream=True
     )
     
-    return response['message']['content']
+    for chunk in stream:
+        yield chunk['message']['content']
 
-def chat(messages: list) -> str:
-    response = ollama.chat(
+def chat(messages: list):
+    """
+    Stream chat response (generator)
+    """
+    stream = ollama.chat(
         model='llama3.1',
-        messages=messages
+        messages=messages,
+        stream=True
     )
     
-    return response['message']['content']
+    for chunk in stream:
+        yield chunk['message']['content']

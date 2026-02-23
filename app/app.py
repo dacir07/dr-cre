@@ -188,6 +188,7 @@ if 'user_data' not in st.session_state:
 if 'score_result' not in st.session_state:
     st.session_state.score_result = None
 
+
 # ===== PAGE 2: Results & Chat =====
 if st.session_state.page == 'chat':
     # Back button
@@ -210,11 +211,22 @@ if st.session_state.page == 'chat':
     
     st.divider()
     
-    # Get initial advice from Dr.Cre
+    # Get initial advice from Dr.Cre with streaming
     if len(st.session_state.messages) == 0:
-        with st.spinner('Dr.Cre is thinking...'):
-            advice = get_advice(st.session_state.user_data, score, rating)
-            st.session_state.messages.append({'role': 'assistant', 'content': advice})
+        message_placeholder = st.empty()
+        full_response = ""
+        
+        for chunk in get_advice(st.session_state.user_data, score, rating):
+            full_response += chunk
+            message_placeholder.markdown(f"""
+            <div class="message-box assistant-msg">
+                <div style="font-weight: 600; font-size: 0.9em; margin-bottom: 5px;">🎓 Dr.Cre</div>
+                <div>{full_response}▌</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.session_state.messages.append({'role': 'assistant', 'content': full_response})
+        st.rerun()
     
     # Display chat history
     st.markdown('<div class="chat-messages">', unsafe_allow_html=True)
@@ -238,22 +250,37 @@ if st.session_state.page == 'chat':
     # Chat input
     user_input = st.chat_input('Ask Dr.Cre a question...')
     if user_input:
-        # Add user message
         st.session_state.messages.append({'role': 'user', 'content': user_input})
-        
+        st.rerun()
+
+    # Generate response if last message is from user
+    if len(st.session_state.messages) > 0 and st.session_state.messages[-1]['role'] == 'user':
         # Build conversation context
-        messages = [
-            {'role': 'system', 'content': f'You are Dr.Cre. User score: {score}. Answer briefly in 2-3 sentences.'}
+        conversation = [
+            {'role': 'system', 'content': f'You are Dr.Cre. User score: {score}. Answer in 1-2 short sentences only.'}
         ]
         
-        for msg in st.session_state.messages[-4:]:  # Keep last 4 messages for context
-            messages.append({'role': msg['role'], 'content': msg['content']})
+        for msg in st.session_state.messages[:-1][-4:]:
+            conversation.append({'role': msg['role'], 'content': msg['content']})
         
-        # Get LLM response
-        with st.spinner('Thinking...'):
-            response = chat(messages)
-            st.session_state.messages.append({'role': 'assistant', 'content': response})
-            st.rerun()
+        conversation.append({'role': 'user', 'content': st.session_state.messages[-1]['content']})
+        
+        # Stream LLM response
+        message_placeholder = st.empty()
+        full_response = ""
+        
+        for chunk in chat(conversation):
+            full_response += chunk
+            message_placeholder.markdown(f"""
+            <div class="message-box assistant-msg">
+                <div style="font-weight: 600; font-size: 0.9em; margin-bottom: 5px;">🎓 Dr.Cre</div>
+                <div>{full_response}▌</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.session_state.messages.append({'role': 'assistant', 'content': full_response})
+        st.rerun()
+
 
 # ===== PAGE 1: Input Form =====
 elif st.session_state.page == 'input':
@@ -284,7 +311,6 @@ elif st.session_state.page == 'input':
     
     # Calculate button
     if st.button('Calculate My Score', use_container_width=False):
-        # Prepare user data
         st.session_state.user_data = {
             'RevolvingUtilizationOfUnsecuredLines': credit_utilization / 100,
             'age': age,
@@ -298,11 +324,9 @@ elif st.session_state.page == 'input':
             'NumberOfDependents': dependents
         }
         
-        # Calculate credit score
         with st.spinner('Calculating...'):
             st.session_state.score_result = calculate_score(st.session_state.user_data)
         
-        # Switch to chat page
         st.session_state.page = 'chat'
         st.session_state.messages = []
         st.rerun()

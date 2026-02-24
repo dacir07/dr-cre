@@ -215,6 +215,14 @@ if st.session_state.page == 'chat':
     if len(st.session_state.messages) == 0:
         message_placeholder = st.empty()
         full_response = ""
+
+        # Show thinking message first
+        message_placeholder.markdown("""
+        <div class="message-box assistant-msg">
+            <div style="font-weight: 600; font-size: 0.9em; margin-bottom: 5px;">🎓 Dr.Cre</div>
+            <div>Dr.Cre is thinking...</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         for chunk in get_advice(st.session_state.user_data, score, rating):
             full_response += chunk
@@ -269,6 +277,15 @@ if st.session_state.page == 'chat':
         message_placeholder = st.empty()
         full_response = ""
         
+          # Show thinking message first
+        message_placeholder.markdown("""
+        <div class="message-box assistant-msg">
+            <div style="font-weight: 600; font-size: 0.9em; margin-bottom: 5px;">🎓 Dr.Cre</div>
+            <div>Dr.Cre is thinking...</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+
         for chunk in chat(conversation):
             full_response += chunk
             message_placeholder.markdown(f"""
@@ -330,3 +347,22 @@ elif st.session_state.page == 'input':
         st.session_state.page = 'chat'
         st.session_state.messages = []
         st.rerun()
+
+    
+    # App description
+    st.markdown("""
+    <div style="margin-top: 50px; padding: 20px; background: #f9f9f9; border-radius: 15px;">
+        <p style="color: #666; font-size: 0.95em; line-height: 1.6; margin: 0;">
+            Dr.Cre uses machine learning trained on 110,000+ US credit records to predict 
+            your credit score and provide personalized advice. Powered by XGBoost model and 
+            local LLM for private, real-time recommendations.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Footer
+    st.markdown("""
+    <div style="text-align: center; margin-top: 40px; padding: 20px; color: #999; font-size: 0.85em;">
+        Made by <strong style="color: #666;">Hojun Kim</strong>
+    </div>
+    """, unsafe_allow_html=True)

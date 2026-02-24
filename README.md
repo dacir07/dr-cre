@@ -129,7 +129,7 @@ CC BY-NC 4.0 - see [LICENSE](LICENSE) file for details.
 
 ## Author
 
-**[Hojun Kim]**  
+**[kimh.july@gmail.com]**  
 
 ## Acknowledgments
 
